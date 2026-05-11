@@ -36,12 +36,14 @@ class LogStreamHandler:
         self.http_server = LogsHTTPServer(port=port)
         self.log_queue: queue.Queue = queue.Queue(maxsize=1000)
         self.is_running = False
+        self.log_file_path: Optional[str] = None
         
-    def start(self, test_run_title: str = "Test Execution") -> str:
+    def start(self, test_run_title: str = "Test Execution", log_file_path: Optional[str] = None) -> str:
         """Start the log streaming HTTP server.
         
         Args:
             test_run_title: Title of the test run for display
+            log_file_path: Path to the log file for download functionality
             
         Returns:
             URL where logs can be viewed
@@ -51,6 +53,9 @@ class LogStreamHandler:
             return self._get_log_viewer_url()
         
         try:
+            # Store log file path for download functionality
+            self.log_file_path = log_file_path
+            
             # Get local IP address
             local_ip = self._get_local_ip()
             
@@ -59,6 +64,7 @@ class LogStreamHandler:
                 log_queue=self.log_queue,
                 test_run_title=test_run_title,
                 local_ip=local_ip,
+                log_file_path=log_file_path,
             )
             
             self.is_running = True

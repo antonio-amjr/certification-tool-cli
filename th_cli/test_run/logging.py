@@ -62,8 +62,7 @@ def configure_logger_for_run(title: str, enable_log_streaming: bool = False) -> 
             from th_cli.test_run.log_stream_handler import LogStreamHandler
 
             _log_stream_handler = LogStreamHandler(port=8998)
-            viewer_url = _log_stream_handler.start(test_run_title=title)
-
+            viewer_url = _log_stream_handler.start(test_run_title=title, log_file_path=log_path)
             # Add custom sink that forwards logs to the stream handler
             def stream_sink(message):
                 """Custom sink that forwards logs to the HTTP stream."""

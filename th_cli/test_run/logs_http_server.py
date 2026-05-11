@@ -27,6 +27,7 @@ from loguru import logger
 # HTTP Endpoints
 ENDPOINT_ROOT = "/"
 ENDPOINT_LOGS_STREAM = "/api/logs/stream"
+ENDPOINT_DOWNLOAD_LOGS = "/download_logs"
 
 
 class LogStreamingHandler(BaseHTTPRequestHandler):
@@ -38,9 +39,39 @@ class LogStreamingHandler(BaseHTTPRequestHandler):
             self.serve_log_viewer()
         elif self.path == ENDPOINT_LOGS_STREAM:
             self.stream_logs()
+        elif self.path == ENDPOINT_DOWNLOAD_LOGS:
+            self.download_logs()
         else:
             logger.warning(f"404 for GET {self.path}")
             self.send_error(404)
+    
+    def download_logs(self):
+        """Serve the log file for download."""
+        log_file_path = getattr(self.server, "log_file_path", None)
+        
+        if not log_file_path or not Path(log_file_path).exists():
+            self.send_error(404, "Log file not found")
+            return
+        
+        try:
+            with open(log_file_path, 'rb') as f:
+                log_content = f.read()
+            
+            filename = Path(log_file_path).name
+            
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Content-Length", str(len(log_content)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(log_content)
+            
+            logger.info(f"Log file downloaded: {filename}")
+            
+        except Exception as e:
+            logger.error(f"Error serving log file: {e}")
+            self.send_error(500, f"Error reading log file: {str(e)}")
 
     def stream_logs(self):
         """Stream logs using Server-Sent Events (SSE)."""
@@ -189,6 +220,7 @@ class LogsHTTPServer:
         log_queue: queue.Queue,
         test_run_title: str = "Test Execution",
         local_ip: Optional[str] = None,
+        log_file_path: Optional[str] = None,
     ):
         """Start HTTP server for log streaming.
         
@@ -196,6 +228,7 @@ class LogsHTTPServer:
             log_queue: Queue containing log entries to stream
             test_run_title: Title of the test run for display
             local_ip: Local IP address for display (defaults to localhost)
+            log_file_path: Path to log file for download functionality
         """
         try:
             # Use ThreadingHTTPServer for better concurrency
@@ -206,6 +239,7 @@ class LogsHTTPServer:
             self.server.log_queue = log_queue
             self.server.test_run_title = test_run_title
             self.server.local_ip = local_ip or "localhost"
+            self.server.log_file_path = log_file_path
 
             logger.info(f"Logs HTTP server configured for test run: {test_run_title}")
 
