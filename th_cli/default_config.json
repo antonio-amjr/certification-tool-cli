@@ -30,7 +30,7 @@
   "log_streaming": {
     "enabled": true,
     "port": 8998,
-    "description": "Real-time log streaming configuration. When enabled, access the logs via browser at http://<ip>:<port>/ during test execution."
+    "description": "Real-time log streaming configuration"
   },
   "test_parameters": {}
 }
