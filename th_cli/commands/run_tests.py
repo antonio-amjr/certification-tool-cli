@@ -97,6 +97,11 @@ TWO_WAY_TALK_TEST_IDS: frozenset[str] = frozenset({"TC_WEBRTC_1_6"})
     is_flag=True,
     help=colorize_help("Disable colored output for test execution status."),
 )
+@click.option(
+    "--no-streaming",
+    is_flag=True,
+    help=colorize_help("Disable real-time log streaming via web browser (enabled by default)."),
+)
 @async_cmd
 @click.pass_context
 async def run_tests(
@@ -107,6 +112,7 @@ async def run_tests(
     pics_config_folder: str | None = None,
     project_id: int | None = None,
     no_color: bool = False,
+    no_streaming: bool = False,
 ) -> None:
     """Execute a CLI test run from selected test cases.
 
@@ -147,8 +153,9 @@ async def run_tests(
         async_apis = AsyncApis(client)
         test_collections_api = async_apis.test_collections_api
 
-        # Configure new log output for test with real-time streaming enabled
-        log_path = test_logging.configure_logger_for_run(title=title, enable_log_streaming=True)
+        # Configure new log output for test with real-time streaming (enabled by default)
+        enable_streaming = not no_streaming
+        log_path = test_logging.configure_logger_for_run(title=title, enable_log_streaming=enable_streaming)
 
         # Retrieve CLI project
         cli_project = await _get_cli_project(async_apis, project_id)
