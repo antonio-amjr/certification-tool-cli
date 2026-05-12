@@ -761,7 +761,9 @@
                 const timestamp = entry.timestamp || new Date().toISOString();
                 const level = entry.level || 'INFO';
                 const message = entry.message || '';
-                logContent += `${{timestamp}} [${{level}}] ${{message}}\\n`;
+                // Replace literal \n strings with actual newlines, then add entry
+                const cleanMessage = message.replace(/\\n/g, '\n');
+                logContent += `${{timestamp}} [${{level}}] ${{cleanMessage}}\n`;
             }});
 
             if (logContent === '') {{

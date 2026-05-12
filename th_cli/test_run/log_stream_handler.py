@@ -129,9 +129,9 @@ class LogStreamHandler:
             # Try to add to queue without blocking
             self.log_queue.put_nowait(log_entry)
         except queue.Full:
-            # Queue is full, skip this entry to avoid blocking
-            # This is acceptable for real-time streaming
-            logger.debug("Log queue full, skipping entry")
+            # Queue is full, skip this entry silently to avoid blocking
+            # This is acceptable for real-time streaming when no browser is connected
+            pass
     
     def _get_local_ip(self) -> str:
         """Get the local IP address of the machine.

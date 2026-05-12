@@ -73,11 +73,12 @@ def configure_logger_for_run(title: str, enable_log_streaming: bool = False) -> 
                         level=record["level"].name,
                         timestamp=record["time"].isoformat()
                     )
-                except Exception as e:
+                except Exception:
                     # Silently fail to avoid disrupting logging
                     pass
 
-            logger.add(stream_sink, format="{message}")
+            # Add sink with enqueue=True to prevent re-entrancy and catch=True to suppress errors
+            logger.add(stream_sink, format="{message}", enqueue=True, catch=True)
             logger.info(f"Real-time log streaming enabled: {viewer_url}")
 
         except Exception as e:
