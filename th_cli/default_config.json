@@ -27,10 +27,5 @@
     "chip_use_paa_certs": false,
     "trace_log": true
   },
-  "log_streaming": {
-    "enabled": true,
-    "port": 8998,
-    "description": "Real-time log streaming configuration"
-  },
   "test_parameters": {}
 }

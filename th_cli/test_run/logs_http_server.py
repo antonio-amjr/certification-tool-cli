@@ -46,7 +46,7 @@ class LogStreamingHandler(BaseHTTPRequestHandler):
             self.send_error(404)
     
     def download_logs(self):
-        """Serve the log file for download."""
+        """Serve the log file for download using chunked streaming."""
         log_file_path = getattr(self.server, "log_file_path", None)
         
         if not log_file_path or not Path(log_file_path).exists():
@@ -54,24 +54,35 @@ class LogStreamingHandler(BaseHTTPRequestHandler):
             return
         
         try:
-            with open(log_file_path, 'rb') as f:
-                log_content = f.read()
+            file_path = Path(log_file_path)
+            filename = file_path.name
+            file_size = file_path.stat().st_size
             
-            filename = Path(log_file_path).name
-            
+            # Send headers
             self.send_response(200)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
             self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
-            self.send_header("Content-Length", str(len(log_content)))
+            self.send_header("Content-Length", str(file_size))
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            self.wfile.write(log_content)
             
-            logger.info(f"Log file downloaded: {filename}")
+            # Stream file in chunks to avoid loading entire file into memory
+            CHUNK_SIZE = 65536  # 64KB chunks
+            bytes_sent = 0
+
+            with open(log_file_path, 'rb') as f:
+                while chunk := f.read(CHUNK_SIZE):
+                    self.wfile.write(chunk)
+                    bytes_sent += len(chunk)
+
+            logger.info(f"Log file downloaded: {filename} ({bytes_sent} bytes)")
             
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            # Client disconnected during download - normal, not an error
+            logger.debug("Client disconnected during log file download")
         except Exception as e:
             logger.error(f"Error serving log file: {e}")
-            self.send_error(500, f"Error reading log file: {str(e)}")
+            # Note: Can't send error response because headers were already sent
 
     def stream_logs(self):
         """Stream logs using Server-Sent Events (SSE)."""

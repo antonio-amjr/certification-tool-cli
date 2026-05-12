@@ -78,7 +78,7 @@ def configure_logger_for_run(title: str, enable_log_streaming: bool = False) -> 
                     pass
 
             # Add sink with enqueue=True to prevent re-entrancy and catch=True to suppress errors
-            logger.add(stream_sink, format="{message}", enqueue=True, catch=True)
+            logger.add(stream_sink, format="{message}", catch=True)
             logger.info(f"Real-time log streaming enabled: {viewer_url}")
 
         except Exception as e:
