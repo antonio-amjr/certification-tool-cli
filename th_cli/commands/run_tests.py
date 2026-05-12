@@ -149,20 +149,6 @@ async def run_tests(
 
         # Configure new log output for test with real-time streaming enabled
         log_path = test_logging.configure_logger_for_run(title=title, enable_log_streaming=True)
-        
-        # Display log streaming URL if available
-        log_stream_url = test_logging.get_log_stream_url()
-        if log_stream_url:
-            border = click.style("═" * 60, fg="cyan", bold=True)
-            click.echo("")
-            click.echo(border)
-            click.echo(click.style("  📋 Real-Time Log Viewer Available", fg="cyan", bold=True))
-            click.echo(border)
-            click.echo(click.style("  View logs in real-time at:", fg="bright_white", bold=True))
-            click.echo("  " + click.style(f"{log_stream_url}", fg="cyan", bold=True, underline=True))
-            click.echo(click.style("  Logs will stream automatically as tests execute", fg="bright_white"))
-            click.echo(border)
-            click.echo("")
 
         # Retrieve CLI project
         cli_project = await _get_cli_project(async_apis, project_id)
@@ -208,6 +194,20 @@ async def run_tests(
         selected_tests_dict = build_test_selection(test_collections, validated_test_ids)
 
         click.echo(colorize_key_value("Selected tests", json.dumps(selected_tests_dict, indent=JSON_INDENT)))
+
+        # Display log streaming URL if available
+        log_stream_url = test_logging.get_log_stream_url()
+        if log_stream_url:
+            border = click.style("═" * 60, fg="cyan", bold=True)
+            click.echo("")
+            click.echo(border)
+            click.echo(click.style("  📋 Real-Time Log Viewer Available", fg="cyan", bold=True))
+            click.echo(border)
+            click.echo(click.style("  View logs in real-time at:", fg="bright_white", bold=True))
+            click.echo("  " + click.style(f"{log_stream_url}", fg="cyan", bold=True, underline=True))
+            click.echo(click.style("  Logs will stream automatically as tests execute", fg="bright_white"))
+            click.echo(border)
+            click.echo("")
 
         new_test_run = await _create_new_test_run_cli(
             async_apis,
