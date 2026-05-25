@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Project CHIP Authors
+# Copyright (c) 2026 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
 #
 # flake8: noqa E501
 from asyncio import get_event_loop
-from typing import TYPE_CHECKING, Awaitable, List, Optional
-
-from fastapi.encoders import jsonable_encoder
+from typing import IO, TYPE_CHECKING, Any, Coroutine
 
 from th_cli.api_lib_autogen import models as m
 
@@ -29,70 +27,11 @@ class _ProjectsApi:
     def __init__(self, api_client: "ApiClient"):
         self.api_client = api_client
 
-    def _build_for_archive_project_api_v1_projects_id_archive_post(self, id: int) -> Awaitable[m.Project]:
+    def _build_for_read_projects_api_v1_projects__get(
+        self, archived: bool | None = None, skip: int | None = None, limit: int | None = None
+    ) -> Coroutine[Any, Any, list[m.Project]]:
         """
-        Archive project by id.  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was archived
-        """
-        path_params = {"id": str(id)}
-
-        return self.api_client.request(
-            type_=m.Project,
-            method="POST",
-            url="/api/v1/projects/{id}/archive",
-            path_params=path_params,
-        )
-
-    def _build_for_create_project_api_v1_projects_post(self, project_create: m.ProjectCreate) -> Awaitable[m.Project]:
-        """
-        Create new project  Args:     project_in (ProjectCreate): Parameters for new project,  see schema for details  Returns:     Project: newly created project record
-        """
-        body = jsonable_encoder(project_create)
-
-        return self.api_client.request(type_=m.Project, method="POST", url="/api/v1/projects/", json=body)
-
-    def _build_for_default_config_api_v1_projects_default_config_get(
-        self,
-    ) -> Awaitable[m.TestEnvironmentConfig]:
-        """
-        Return default configuration for projects.  Returns:     List[Project]: List of projects
-        """
-        return self.api_client.request(
-            type_=m.TestEnvironmentConfig,
-            method="GET",
-            url="/api/v1/projects/default_config",
-        )
-
-    def _build_for_delete_project_api_v1_projects_id_delete(self, id: int) -> Awaitable[m.Project]:
-        """
-        Delete project by id  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was deleted
-        """
-        path_params = {"id": str(id)}
-
-        return self.api_client.request(
-            type_=m.Project,
-            method="DELETE",
-            url="/api/v1/projects/{id}",
-            path_params=path_params,
-        )
-
-    def _build_for_read_project_api_v1_projects_id_get(self, id: int) -> Awaitable[m.Project]:
-        """
-        Lookup project by id  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record
-        """
-        path_params = {"id": str(id)}
-
-        return self.api_client.request(
-            type_=m.Project,
-            method="GET",
-            url="/api/v1/projects/{id}",
-            path_params=path_params,
-        )
-
-    def _build_for_read_projects_api_v1_projects_get(
-        self, archived: Optional[bool] = None, skip: Optional[int] = None, limit: Optional[int] = None
-    ) -> Awaitable[List[m.Project]]:
-        """
-        Retrive list of projects  Args:     archived (bool, optional): Get archived projects, when true will; get archived         projects only, when false only non-archived projects are returned.         Defaults to false.     skip (int, optional): Pagination offset. Defaults to 0.     limit (int, optional): max number of records to return. Defaults to 100.  Returns:     List[Project]: List of projects
+        Read Projects
         """
         query_params = {}
         if archived is not None:
@@ -103,151 +42,368 @@ class _ProjectsApi:
             query_params["limit"] = str(limit)
 
         return self.api_client.request(
-            type_=List[m.Project],
-            method="GET",
-            url="/api/v1/projects/",
-            params=query_params,
+            type_=list[m.Project], method="GET", url="/api/v1/projects/", params=query_params
         )
 
-    def _build_for_unarchive_project_api_v1_projects_id_unarchive_post(self, id: int) -> Awaitable[m.Project]:
+    def _build_for_create_project_api_v1_projects__post(self, body: m.ProjectCreate) -> Coroutine[Any, Any, m.Project]:
         """
-        Unarchive project by id.  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was unarchived
+        Create Project
+        """
+        json_body = body.model_dump(mode="json") if hasattr(body, "model_dump") else body
+
+        return self.api_client.request(type_=m.Project, method="POST", url="/api/v1/projects/", json=json_body)
+
+    def _build_for_default_config_api_v1_projects_default_config_get(self) -> Coroutine[Any, Any, dict[str, Any]]:
+        """
+        Default Config
+        """
+        return self.api_client.request(type_=dict[str, Any], method="GET", url="/api/v1/projects/default_config")
+
+    def _build_for_read_project_api_v1_projects__id__get(self, id: int) -> Coroutine[Any, Any, m.Project]:
+        """
+        Read Project
         """
         path_params = {"id": str(id)}
+
+        return self.api_client.request(
+            type_=m.Project, method="GET", url="/api/v1/projects/{id}", path_params=path_params
+        )
+
+    def _build_for_update_project_api_v1_projects__id__put(
+        self, body: m.ProjectUpdate, id: int
+    ) -> Coroutine[Any, Any, m.Project]:
+        """
+        Update Project
+        """
+        path_params = {"id": str(id)}
+
+        json_body = body.model_dump(mode="json") if hasattr(body, "model_dump") else body
+
+        return self.api_client.request(
+            type_=m.Project, method="PUT", url="/api/v1/projects/{id}", path_params=path_params, json=json_body
+        )
+
+    def _build_for_delete_project_api_v1_projects__id__delete(self, id: int) -> Coroutine[Any, Any, m.Project]:
+        """
+        Delete Project
+        """
+        path_params = {"id": str(id)}
+
+        return self.api_client.request(
+            type_=m.Project, method="DELETE", url="/api/v1/projects/{id}", path_params=path_params
+        )
+
+    def _build_for_archive_project_api_v1_projects__id__archive_post(self, id: int) -> Coroutine[Any, Any, m.Project]:
+        """
+        Archive Project
+        """
+        path_params = {"id": str(id)}
+
+        return self.api_client.request(
+            type_=m.Project, method="POST", url="/api/v1/projects/{id}/archive", path_params=path_params
+        )
+
+    def _build_for_unarchive_project_api_v1_projects__id__unarchive_post(
+        self, id: int
+    ) -> Coroutine[Any, Any, m.Project]:
+        """
+        Unarchive Project
+        """
+        path_params = {"id": str(id)}
+
+        return self.api_client.request(
+            type_=m.Project, method="POST", url="/api/v1/projects/{id}/unarchive", path_params=path_params
+        )
+
+    def _build_for_upload_pics_api_v1_projects__id__upload_pics_put(
+        self, body: m.BodyUploadPicsApiV1ProjectsIdUploadPicsPut, id: int
+    ) -> Coroutine[Any, Any, m.Project]:
+        """
+        Upload Pics
+        """
+        path_params = {"id": str(id)}
+
+        files: dict[str, IO[Any]] = {}
+        data: dict[str, Any] = {}
+
+        # Process body fields to populate files and data dictionaries
+        if body is not None:
+            # Process field: file
+            if hasattr(body, "file"):
+                field_value = getattr(body, "file")
+                if field_value is not None:
+                    # File field
+                    files["file"] = field_value
 
         return self.api_client.request(
             type_=m.Project,
-            method="POST",
-            url="/api/v1/projects/{id}/unarchive",
+            method="PUT",
+            url="/api/v1/projects/{id}/upload_pics",
             path_params=path_params,
+            data=data,
+            files=files,
         )
 
-    def _build_for_update_project_api_v1_projects_id_put(
-        self, id: int, project_update: m.ProjectUpdate
-    ) -> Awaitable[m.Project]:
+    def _build_for_remove_pics_cluster_type_api_v1_projects__id__pics_cluster_type_delete(
+        self, id: int, cluster_name: str
+    ) -> Coroutine[Any, Any, m.Project]:
         """
-        Update an existing project  Args:     id (int): project id     project_in (schemas.ProjectUpdate): projects parameters to be updated  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: updated project record
+        Remove Pics Cluster Type
         """
         path_params = {"id": str(id)}
 
-        body = jsonable_encoder(project_update)
+        query_params = {"cluster_name": str(cluster_name)}
 
         return self.api_client.request(
-            type_=m.Project, method="PUT", url="/api/v1/projects/{id}", path_params=path_params, json=body
+            type_=m.Project,
+            method="DELETE",
+            url="/api/v1/projects/{id}/pics_cluster_type",
+            path_params=path_params,
+            params=query_params,
+        )
+
+    def _build_for_applicable_test_cases_api_v1_projects__id__applicable_test_cases_get(
+        self, id: int
+    ) -> Coroutine[Any, Any, m.PICSApplicableTestCases]:
+        """
+        Applicable Test Cases
+        """
+        path_params = {"id": str(id)}
+
+        return self.api_client.request(
+            type_=m.PICSApplicableTestCases,
+            method="GET",
+            url="/api/v1/projects/{id}/applicable_test_cases",
+            path_params=path_params,
+        )
+
+    def _build_for_export_project_config_api_v1_projects__id__export_get(
+        self, id: int
+    ) -> Coroutine[Any, Any, m.ProjectCreate]:
+        """
+        Export Project Config
+        """
+        path_params = {"id": str(id)}
+
+        return self.api_client.request(
+            type_=m.ProjectCreate, method="GET", url="/api/v1/projects/{id}/export", path_params=path_params
+        )
+
+    def _build_for_importproject_config_api_v1_projects_import_post(
+        self, body: m.BodyImportprojectConfigApiV1ProjectsImportPost
+    ) -> Coroutine[Any, Any, m.Project]:
+        """
+        Importproject Config
+        """
+        files: dict[str, IO[Any]] = {}
+        data: dict[str, Any] = {}
+
+        # Process body fields to populate files and data dictionaries
+        if body is not None:
+            # Process field: import_file
+            if hasattr(body, "import_file"):
+                field_value = getattr(body, "import_file")
+                if field_value is not None:
+                    # File field
+                    files["import_file"] = field_value
+
+        return self.api_client.request(
+            type_=m.Project, method="POST", url="/api/v1/projects/import", data=data, files=files
         )
 
 
 class AsyncProjectsApi(_ProjectsApi):
-    async def archive_project_api_v1_projects_id_archive_post(self, id: int) -> m.Project:
+    async def read_projects_api_v1_projects__get(
+        self, archived: bool | None = None, skip: int | None = None, limit: int | None = None
+    ) -> list[m.Project]:
         """
-        Archive project by id.  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was archived
+        Read Projects
         """
-        return await self._build_for_archive_project_api_v1_projects_id_archive_post(id=id)
+        return await self._build_for_read_projects_api_v1_projects__get(archived=archived, skip=skip, limit=limit)
 
-    async def create_project_api_v1_projects_post(self, project_create: m.ProjectCreate) -> m.Project:
+    async def create_project_api_v1_projects__post(self, body: m.ProjectCreate) -> m.Project:
         """
-        Create new project  Args:     project_in (ProjectCreate): Parameters for new project,  see schema for details  Returns:     Project: newly created project record
+        Create Project
         """
-        return await self._build_for_create_project_api_v1_projects_post(project_create=project_create)
+        return await self._build_for_create_project_api_v1_projects__post(body=body)
 
-    async def default_config_api_v1_projects_default_config_get(
-        self,
-    ) -> m.TestEnvironmentConfig:
+    async def default_config_api_v1_projects_default_config_get(self) -> dict[str, Any]:
         """
-        Return default configuration for projects.  Returns:     List[Project]: List of projects
+        Default Config
         """
         return await self._build_for_default_config_api_v1_projects_default_config_get()
 
-    async def delete_project_api_v1_projects_id_delete(self, id: int) -> m.Project:
+    async def read_project_api_v1_projects__id__get(self, id: int) -> m.Project:
         """
-        Delete project by id  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was deleted
+        Read Project
         """
-        return await self._build_for_delete_project_api_v1_projects_id_delete(id=id)
+        return await self._build_for_read_project_api_v1_projects__id__get(id=id)
 
-    async def read_project_api_v1_projects_id_get(self, id: int) -> m.Project:
+    async def update_project_api_v1_projects__id__put(self, body: m.ProjectUpdate, id: int) -> m.Project:
         """
-        Lookup project by id  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record
+        Update Project
         """
-        return await self._build_for_read_project_api_v1_projects_id_get(id=id)
+        return await self._build_for_update_project_api_v1_projects__id__put(body=body, id=id)
 
-    async def read_projects_api_v1_projects_get(
-        self, archived: Optional[bool] = None, skip: Optional[int] = None, limit: Optional[int] = None
-    ) -> List[m.Project]:
+    async def delete_project_api_v1_projects__id__delete(self, id: int) -> m.Project:
         """
-        Retrive list of projects  Args:     archived (bool, optional): Get archived projects, when true will; get archived         projects only, when false only non-archived projects are returned.         Defaults to false.     skip (int, optional): Pagination offset. Defaults to 0.     limit (int, optional): max number of records to return. Defaults to 100.  Returns:     List[Project]: List of projects
+        Delete Project
         """
-        return await self._build_for_read_projects_api_v1_projects_get(archived=archived, skip=skip, limit=limit)
+        return await self._build_for_delete_project_api_v1_projects__id__delete(id=id)
 
-    async def unarchive_project_api_v1_projects_id_unarchive_post(self, id: int) -> m.Project:
+    async def archive_project_api_v1_projects__id__archive_post(self, id: int) -> m.Project:
         """
-        Unarchive project by id.  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was unarchived
+        Archive Project
         """
-        return await self._build_for_unarchive_project_api_v1_projects_id_unarchive_post(id=id)
+        return await self._build_for_archive_project_api_v1_projects__id__archive_post(id=id)
 
-    async def update_project_api_v1_projects_id_put(self, id: int, project_update: m.ProjectUpdate) -> m.Project:
+    async def unarchive_project_api_v1_projects__id__unarchive_post(self, id: int) -> m.Project:
         """
-        Update an existing project  Args:     id (int): project id     project_in (schemas.ProjectUpdate): projects parameters to be updated  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: updated project record
+        Unarchive Project
         """
-        return await self._build_for_update_project_api_v1_projects_id_put(id=id, project_update=project_update)
+        return await self._build_for_unarchive_project_api_v1_projects__id__unarchive_post(id=id)
+
+    async def upload_pics_api_v1_projects__id__upload_pics_put(
+        self, body: m.BodyUploadPicsApiV1ProjectsIdUploadPicsPut, id: int
+    ) -> m.Project:
+        """
+        Upload Pics
+        """
+        return await self._build_for_upload_pics_api_v1_projects__id__upload_pics_put(body=body, id=id)
+
+    async def remove_pics_cluster_type_api_v1_projects__id__pics_cluster_type_delete(
+        self, id: int, cluster_name: str
+    ) -> m.Project:
+        """
+        Remove Pics Cluster Type
+        """
+        return await self._build_for_remove_pics_cluster_type_api_v1_projects__id__pics_cluster_type_delete(
+            id=id, cluster_name=cluster_name
+        )
+
+    async def applicable_test_cases_api_v1_projects__id__applicable_test_cases_get(
+        self, id: int
+    ) -> m.PICSApplicableTestCases:
+        """
+        Applicable Test Cases
+        """
+        return await self._build_for_applicable_test_cases_api_v1_projects__id__applicable_test_cases_get(id=id)
+
+    async def export_project_config_api_v1_projects__id__export_get(self, id: int) -> m.ProjectCreate:
+        """
+        Export Project Config
+        """
+        return await self._build_for_export_project_config_api_v1_projects__id__export_get(id=id)
+
+    async def importproject_config_api_v1_projects_import_post(
+        self, body: m.BodyImportprojectConfigApiV1ProjectsImportPost
+    ) -> m.Project:
+        """
+        Importproject Config
+        """
+        return await self._build_for_importproject_config_api_v1_projects_import_post(body=body)
 
 
 class SyncProjectsApi(_ProjectsApi):
-    def archive_project_api_v1_projects_id_archive_post(self, id: int) -> m.Project:
+    def read_projects_api_v1_projects__get(
+        self, archived: bool | None = None, skip: int | None = None, limit: int | None = None
+    ) -> list[m.Project]:
         """
-        Archive project by id.  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was archived
+        Read Projects
         """
-        coroutine = self._build_for_archive_project_api_v1_projects_id_archive_post(id=id)
+        coroutine = self._build_for_read_projects_api_v1_projects__get(archived=archived, skip=skip, limit=limit)
         return get_event_loop().run_until_complete(coroutine)
 
-    def create_project_api_v1_projects_post(self, project_create: m.ProjectCreate) -> m.Project:
+    def create_project_api_v1_projects__post(self, body: m.ProjectCreate) -> m.Project:
         """
-        Create new project  Args:     project_in (ProjectCreate): Parameters for new project,  see schema for details  Returns:     Project: newly created project record
+        Create Project
         """
-        coroutine = self._build_for_create_project_api_v1_projects_post(project_create=project_create)
+        coroutine = self._build_for_create_project_api_v1_projects__post(body=body)
         return get_event_loop().run_until_complete(coroutine)
 
-    def default_config_api_v1_projects_default_config_get(
-        self,
-    ) -> m.TestEnvironmentConfig:
+    def default_config_api_v1_projects_default_config_get(self) -> dict[str, Any]:
         """
-        Return default configuration for projects.  Returns:     List[Project]: List of projects
+        Default Config
         """
         coroutine = self._build_for_default_config_api_v1_projects_default_config_get()
         return get_event_loop().run_until_complete(coroutine)
 
-    def delete_project_api_v1_projects_id_delete(self, id: int) -> m.Project:
+    def read_project_api_v1_projects__id__get(self, id: int) -> m.Project:
         """
-        Delete project by id  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was deleted
+        Read Project
         """
-        coroutine = self._build_for_delete_project_api_v1_projects_id_delete(id=id)
+        coroutine = self._build_for_read_project_api_v1_projects__id__get(id=id)
         return get_event_loop().run_until_complete(coroutine)
 
-    def read_project_api_v1_projects_id_get(self, id: int) -> m.Project:
+    def update_project_api_v1_projects__id__put(self, body: m.ProjectUpdate, id: int) -> m.Project:
         """
-        Lookup project by id  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record
+        Update Project
         """
-        coroutine = self._build_for_read_project_api_v1_projects_id_get(id=id)
+        coroutine = self._build_for_update_project_api_v1_projects__id__put(body=body, id=id)
         return get_event_loop().run_until_complete(coroutine)
 
-    def read_projects_api_v1_projects_get(
-        self, archived: Optional[bool] = None, skip: Optional[int] = None, limit: Optional[int] = None
-    ) -> List[m.Project]:
+    def delete_project_api_v1_projects__id__delete(self, id: int) -> m.Project:
         """
-        Retrive list of projects  Args:     archived (bool, optional): Get archived projects, when true will; get archived         projects only, when false only non-archived projects are returned.         Defaults to false.     skip (int, optional): Pagination offset. Defaults to 0.     limit (int, optional): max number of records to return. Defaults to 100.  Returns:     List[Project]: List of projects
+        Delete Project
         """
-        coroutine = self._build_for_read_projects_api_v1_projects_get(archived=archived, skip=skip, limit=limit)
+        coroutine = self._build_for_delete_project_api_v1_projects__id__delete(id=id)
         return get_event_loop().run_until_complete(coroutine)
 
-    def unarchive_project_api_v1_projects_id_unarchive_post(self, id: int) -> m.Project:
+    def archive_project_api_v1_projects__id__archive_post(self, id: int) -> m.Project:
         """
-        Unarchive project by id.  Args:     id (int): project id  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: project record that was unarchived
+        Archive Project
         """
-        coroutine = self._build_for_unarchive_project_api_v1_projects_id_unarchive_post(id=id)
+        coroutine = self._build_for_archive_project_api_v1_projects__id__archive_post(id=id)
         return get_event_loop().run_until_complete(coroutine)
 
-    def update_project_api_v1_projects_id_put(self, id: int, project_update: m.ProjectUpdate) -> m.Project:
+    def unarchive_project_api_v1_projects__id__unarchive_post(self, id: int) -> m.Project:
         """
-        Update an existing project  Args:     id (int): project id     project_in (schemas.ProjectUpdate): projects parameters to be updated  Raises:     HTTPException: if no project exists for provided project id  Returns:     Project: updated project record
+        Unarchive Project
         """
-        coroutine = self._build_for_update_project_api_v1_projects_id_put(id=id, project_update=project_update)
+        coroutine = self._build_for_unarchive_project_api_v1_projects__id__unarchive_post(id=id)
+        return get_event_loop().run_until_complete(coroutine)
+
+    def upload_pics_api_v1_projects__id__upload_pics_put(
+        self, body: m.BodyUploadPicsApiV1ProjectsIdUploadPicsPut, id: int
+    ) -> m.Project:
+        """
+        Upload Pics
+        """
+        coroutine = self._build_for_upload_pics_api_v1_projects__id__upload_pics_put(body=body, id=id)
+        return get_event_loop().run_until_complete(coroutine)
+
+    def remove_pics_cluster_type_api_v1_projects__id__pics_cluster_type_delete(
+        self, id: int, cluster_name: str
+    ) -> m.Project:
+        """
+        Remove Pics Cluster Type
+        """
+        coroutine = self._build_for_remove_pics_cluster_type_api_v1_projects__id__pics_cluster_type_delete(
+            id=id, cluster_name=cluster_name
+        )
+        return get_event_loop().run_until_complete(coroutine)
+
+    def applicable_test_cases_api_v1_projects__id__applicable_test_cases_get(
+        self, id: int
+    ) -> m.PICSApplicableTestCases:
+        """
+        Applicable Test Cases
+        """
+        coroutine = self._build_for_applicable_test_cases_api_v1_projects__id__applicable_test_cases_get(id=id)
+        return get_event_loop().run_until_complete(coroutine)
+
+    def export_project_config_api_v1_projects__id__export_get(self, id: int) -> m.ProjectCreate:
+        """
+        Export Project Config
+        """
+        coroutine = self._build_for_export_project_config_api_v1_projects__id__export_get(id=id)
+        return get_event_loop().run_until_complete(coroutine)
+
+    def importproject_config_api_v1_projects_import_post(
+        self, body: m.BodyImportprojectConfigApiV1ProjectsImportPost
+    ) -> m.Project:
+        """
+        Importproject Config
+        """
+        coroutine = self._build_for_importproject_config_api_v1_projects_import_post(body=body)
         return get_event_loop().run_until_complete(coroutine)

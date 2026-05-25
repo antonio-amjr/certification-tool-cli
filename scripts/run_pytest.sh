@@ -1,5 +1,6 @@
+#! /usr/bin/env bash
 #
-# Copyright (c) 2025 Project CHIP Authors
+# Copyright (c) 2025-2026 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,5 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-"""Test package for th_cli."""
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd .. && pwd)"
+
+#Using an array to store the arguments, to handle 'whitespaces' correctly
+args=("$@")
+poetry run --project="$PROJECT_ROOT" pytest --ignore=client_generator "${args[@]}"

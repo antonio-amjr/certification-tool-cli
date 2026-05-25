@@ -23,31 +23,31 @@ if TYPE_CHECKING:
     from th_cli.api_lib_autogen.api_client import ApiClient
 
 
-class _UtilsApi:
+class _VersionApi:
     def __init__(self, api_client: "ApiClient"):
         self.api_client = api_client
 
-    def _build_for_test_email_api_v1_utils_test_email__post(self, email_to: str) -> Coroutine[Any, Any, m.Msg]:
+    def _build_for_get_test_harness_backend_version_api_v1_version_get(
+        self,
+    ) -> Coroutine[Any, Any, m.TestHarnessBackendVersion]:
         """
-        Test Email
+        Get Test Harness Backend Version
         """
-        query_params = {"email_to": str(email_to)}
-
-        return self.api_client.request(type_=m.Msg, method="POST", url="/api/v1/utils/test-email/", params=query_params)
-
-
-class AsyncUtilsApi(_UtilsApi):
-    async def test_email_api_v1_utils_test_email__post(self, email_to: str) -> m.Msg:
-        """
-        Test Email
-        """
-        return await self._build_for_test_email_api_v1_utils_test_email__post(email_to=email_to)
+        return self.api_client.request(type_=m.TestHarnessBackendVersion, method="GET", url="/api/v1/version")
 
 
-class SyncUtilsApi(_UtilsApi):
-    def test_email_api_v1_utils_test_email__post(self, email_to: str) -> m.Msg:
+class AsyncVersionApi(_VersionApi):
+    async def get_test_harness_backend_version_api_v1_version_get(self) -> m.TestHarnessBackendVersion:
         """
-        Test Email
+        Get Test Harness Backend Version
         """
-        coroutine = self._build_for_test_email_api_v1_utils_test_email__post(email_to=email_to)
+        return await self._build_for_get_test_harness_backend_version_api_v1_version_get()
+
+
+class SyncVersionApi(_VersionApi):
+    def get_test_harness_backend_version_api_v1_version_get(self) -> m.TestHarnessBackendVersion:
+        """
+        Get Test Harness Backend Version
+        """
+        coroutine = self._build_for_get_test_harness_backend_version_api_v1_version_get()
         return get_event_loop().run_until_complete(coroutine)

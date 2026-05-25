@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Project CHIP Authors
+# Copyright (c) 2023-2026 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,13 +22,18 @@ from pydantic import BaseModel
 from th_cli.exceptions import CLIError
 
 
+def known_cli_path() -> Path:
+    """Return the known CLI path from the home directory."""
+    return Path.home() / "certification-tool" / "cli"
+
+
 def get_package_root() -> Path:
     """
     Get the root directory of the package installation.
     This works for both editable and non-editable installations.
     """
     # Get the directory containing this config.py file
-    return Path(__file__).parent.parent
+    return Path(__file__).parent
 
 
 def find_git_root() -> Path | None:
@@ -46,31 +51,14 @@ def find_git_root() -> Path | None:
         current_path = current_path.parent
 
     # If not found in package location, try current working directory
-    current_path = Path.cwd()
+    current_path = known_cli_path()
+
     while current_path != current_path.parent:
         if (current_path / ".git").exists():
             return current_path
         current_path = current_path.parent
 
     return None
-
-
-def is_editable_install() -> bool:
-    """
-    Detect if this is an editable installation.
-    """
-    package_root = get_package_root()
-    git_root = find_git_root()
-
-    # If git root and package root are the same, it's likely editable
-    if git_root and package_root:
-        try:
-            # Check if package root is within or same as git root
-            package_root.relative_to(git_root)
-            return True
-        except ValueError:
-            return False
-    return False
 
 
 def get_config_search_paths() -> list[Path]:
@@ -82,22 +70,21 @@ def get_config_search_paths() -> list[Path]:
     # Always include current working directory
     paths.append(Path.cwd())
 
+    # Include known CLI path in home directory
+    paths.append(known_cli_path())
+
     # Include package installation directory
     package_root = get_package_root()
     paths.append(package_root)
-
-    # If not editable install, also check git root (original source)
-    if not is_editable_install():
-        git_root = find_git_root()
-        if git_root and git_root != package_root:
-            paths.append(git_root)
 
     return paths
 
 
 class LogConfig(BaseModel):
-    output_log_path = "./run_logs"
-    format = "<level>{level: <8}</level> | <green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>"
+    output_log_path: str = "./run_logs"
+    format: str = (
+        "<level>{level: <8}</level> | <green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>"
+    )
 
 
 class Config(BaseModel):
@@ -124,14 +111,14 @@ def load_config():
     search_paths = get_config_search_paths()
 
     # Try different possible locations for config files
-    possible_locations = []
+    possible_locations: list[Path] = []
     for path in search_paths:
         possible_locations.append(path / "config.json")
 
     for config_path in possible_locations:
         if config_path.exists():
             try:
-                return Config.parse_file(config_path)
+                return Config.model_validate_json(config_path.read_text(encoding="utf-8"))
             except Exception as e:
                 CLIError(f"Could not load config from {config_path}: {e}")
                 continue

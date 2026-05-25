@@ -14,14 +14,43 @@
 # limitations under the License.
 #
 import queue
+import shutil
+import subprocess
 import threading
-from typing import Optional
 
 import ffmpeg
 from loguru import logger
 
 # Constants
 CHUNK_SIZE = 8192  # 8KB chunks for optimal streaming performance
+
+FFMPEG_NOT_INSTALLED_MSG = (
+    "\n"
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    "❌ FFmpeg is NOT installed!\n"
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    "\n"
+    "FFmpeg is required for video streaming functionality.\n"
+    "\n"
+    "📦 Installation Instructions:\n"
+    "\n"
+    "    sudo apt-get update\n"
+    "    sudo apt-get install ffmpeg\n"
+    "\n"
+    "✅ After installation, verify with:\n"
+    "    ffmpeg -version\n"
+    "\n"
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+)
+
+
+# Custom Exceptions
+class FFmpegNotInstalledError(RuntimeError):
+    """Raised when FFmpeg is not installed or not found in PATH."""
+
+    def __init__(self, message: str = FFMPEG_NOT_INSTALLED_MSG):
+        self.message = message
+        super().__init__(self.message)
 
 
 class FFmpegStreamConverter:
@@ -31,8 +60,40 @@ class FFmpegStreamConverter:
         self.ffmpeg_process = None
         self.output_queue = queue.Queue()
 
+    @staticmethod
+    def check_ffmpeg_installed() -> tuple[bool, str]:
+        """
+        Check if FFmpeg is installed and available.
+
+        Returns:
+            tuple: (is_installed, error_message)
+        """
+        # Check if ffmpeg command exists
+        if shutil.which("ffmpeg") is None:
+            return False, FFMPEG_NOT_INSTALLED_MSG
+
+        # Check ffmpeg version and capabilities
+        try:
+            result = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                version_info = result.stdout.split("\n")[0]
+                logger.info(f"FFmpeg detected: {version_info}")
+                return True, ""
+            else:
+                return False, "FFmpeg command failed to execute properly"
+        except subprocess.TimeoutExpired:
+            return False, "FFmpeg command timed out"
+        except Exception as e:
+            return False, f"Error checking FFmpeg: {e}"
+
     def start_conversion(self):
         """Start FFmpeg process for real-time conversion."""
+        # Check if FFmpeg is installed before starting
+        is_installed, error_msg = self.check_ffmpeg_installed()
+        if not is_installed:
+            logger.error(error_msg)
+            raise FFmpegNotInstalledError(error_msg)
+
         try:
             # Create FFmpeg stream using ffmpeg-python
             # Re-encode to browser-compatible H.264 baseline profile for live streaming

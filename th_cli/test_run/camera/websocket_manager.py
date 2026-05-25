@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025 Project CHIP Authors
+# Copyright (c) 2025-2026 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ class VideoWebSocketManager:
                         # Receive video data from WebSocket
                         data = await asyncio.wait_for(self.video_websocket.recv(), timeout=1.0)
                         logger.debug(
-                            f"Received data: {type(data)}, size: {len(data) if isinstance(data, (bytes, str)) else 'unknown'}"
+                            f"Received data: {type(data)}, size: {len(data) if isinstance(data, (bytes, str)) else 'unknown'}"  # noqa
                         )
 
                         video_data = None
@@ -153,6 +153,7 @@ class VideoWebSocketManager:
 
     async def stop(self):
         """Stop video capture and streaming."""
+        logger.info("Stopping video WebSocket manager")
         self.streaming_active = False
 
         # Stop FFmpeg converter
@@ -161,18 +162,56 @@ class VideoWebSocketManager:
             self.ffmpeg_converter.stop()
             self.ffmpeg_converter = None
 
-        # Stop WebSocket
+        # Close WebSocket connection
         if self.video_websocket:
             try:
                 await self.video_websocket.close()
+                logger.info("Video WebSocket closed")
             except Exception as e:
                 logger.debug(f"Error closing video WebSocket: {e}")
             finally:
                 self.video_websocket = None
 
+        logger.info("Video WebSocket manager stopped")
+
+    def reset(self):
+        """Reset manager state for reuse (synchronous cleanup).
+
+        Note: Marks the WebSocket for reconnection on next use.
+        Only resets state flags. Actual connection close happens in wait_and_connect_with_retry.
+        """
+        logger.info("Resetting video WebSocket manager state")
+
+        # Reset streaming flag
+        self.streaming_active = False
+
+        # Clean up FFmpeg converter if still running
+        if self.ffmpeg_converter:
+            try:
+                self.ffmpeg_converter.stop()
+            except Exception as e:
+                logger.debug(f"Error stopping FFmpeg during reset: {e}")
+            finally:
+                self.ffmpeg_converter = None
+
+        # Mark connection for refresh - backend requires new connection per stream session
+        # The actual close will happen in wait_and_connect_with_retry
+        logger.info("Video WebSocket manager reset complete - connection will be refreshed on next use")
+
     async def wait_and_connect_with_retry(self, max_attempts: int = 30):
         """Wait for video stream to become available and connect with retry."""
         logger.info("Waiting for video stream to become available...")
+
+        # Always close and reconnect for each new stream session
+        # The backend video WebSocket requires a fresh connection per stream
+        if self.video_websocket:
+            logger.info("Closing existing video WebSocket to start fresh stream session")
+            try:
+                await self.video_websocket.close()
+            except Exception as e:
+                logger.debug(f"Error closing existing WebSocket: {e}")
+            finally:
+                self.video_websocket = None
 
         attempt = 0
         while attempt < max_attempts:

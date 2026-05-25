@@ -1,6 +1,6 @@
 <!--
  *
- * Copyright (c) 2023 Project CHIP Authors
+ * Copyright (c) 2026 Project CHIP Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,17 +59,83 @@ Run `th-cli available-tests` to get a list of tests available in Test Harness, p
 
 ### run-tests
 
-Run `th-cli run-tests --tests-list <tests> [--title, -n <title>] [--config, -c <config>] [--pics-config-folder, -p <pics-config-folder>] [--project-id <ID>] [--no-color]` to start a new test execution.
+Run `th-cli run-tests --tests-list <tests> [--title, -n <title>] [--config, -c <config>] [--pics-config-folder, -p <pics-config-folder>] [--project-id <ID>] [--no-color] [-- <extra-sdk-args>]` to start a new test execution.
 
 Required:
 - `--tests-list`: Comma-separated list of test case identifiers (e.g. --tests-list TC-ACE-1.1,TC_ACE_1_3)
 
 Optional:
 - `--title`: Custom title for the test run. If not provided, the current timestamp will be used as the default.
-- `--config`: Path to the property config file. If not specified, default_config.properties will be used.
+- `--config`: Path to the JSON config file. **Accepts two formats:**
+  - **Config-only**: `{"network": {...}, "dut_config": {...}}`
+  - **Full project format**: `{"name": "...", "config": {...}}` (automatically extracts config)
+  
+  This allows the same JSON file to work with `project create`, `project update`, and `run-tests` commands. If not provided, the project's default configuration will be used.
 - `--pics-config-folder`: Path to the folder that contains PICS files. If not specified, no PICS file will be used.
 - `--project-id`: Project ID that this test run belongs to. If not provided, uses the default 'CLI Execution Project' in TH.
 - `--no-color`: Disable all colors from the CLI's output text of this test run execution
+- `-- <extra-sdk-args>`: Pass additional arguments directly to the SDK container Python tests. Use the double dash (`--`) separator followed by any SDK test arguments. These arguments will be added to every Python test execution in the run.
+
+**Example config files:**
+
+Config-only format:
+```json
+{
+  "network": {
+    "wifi": {"ssid": "MyNetwork", "password": "MyPassword"}
+  },
+  "dut_config": {
+    "pairing_mode": "ble-wifi",
+    "setup_code": "20202021"
+  }
+}
+```
+
+Full project format (works with all commands):
+```json
+{
+  "name": "My Project",
+  "config": {
+    "network": {
+      "wifi": {"ssid": "MyNetwork", "password": "MyPassword"}
+    },
+    "dut_config": {
+      "pairing_mode": "ble-wifi",
+      "setup_code": "20202021"
+    }
+  }
+}
+```
+
+**Passing Extra Arguments to SDK Tests:**
+
+You can pass additional arguments directly to the SDK container test execution using the `--` separator. Everything after `--` will be passed as-is to the Python test runner.
+
+Examples:
+```bash
+# Enable trace logging for all tests in the run
+th-cli run-tests -t TC-ACE-1.1 -- --trace-to json:log
+
+# Pass boolean argument
+th-cli run-tests -t TC-ACE-1.1,TC-ACE-1.2 -- --bool-arg flag:true
+
+# Pass multiple extra arguments
+th-cli run-tests -t TC-ACE-1.1 -- --timeout 60 --int-arg some-arg:1 --bool-arg flag:true
+
+# Combine with other CLI options
+th-cli run-tests -t TC-ACE-1.1 --config my-config.json --no-color -- --trace-to json:log
+```
+
+Common SDK test arguments you might want to use for example:
+- `--endpoint <value>` - Choose the device endpoint
+- `--trace-to json:log` - Enable detailed trace logging
+- `--timeout <seconds>` - Override default test timeout
+- `--int-arg <name>:<value>` - Pass integer argument to test
+- `--bool-arg <name>:<true|false>` - Pass boolean argument to test
+- `--string-arg <name>:<value>` - Pass string argument to test
+- `--hex-arg <name>:<hex-value>` - Pass hex value argument to test
+
+**Note:** These extra arguments are applied to ALL Test Cases in the test run. Invalid arguments could cause test failures, so ensure the arguments are valid for the SDK test framework.
 
 ### test-run-execution-history
 
