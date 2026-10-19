@@ -37,6 +37,11 @@ SHARED_CONST_FILE="shared_constants.py"
 CHANGE_WARNING="# WARNING: This file was copied from the backend's $SHARED_CONST_FILE.\n# Do not edit here."
 # --- End of Variables ---
 
+# Poetry (installed by the Test Harness setup scripts) and pipx put their
+# executables in ~/.local/bin. On a fresh machine that folder is only added to
+# PATH by the login shell once it exists, so make sure it is searched here.
+export PATH="$HOME/.local/bin:$PATH"
+
 echo "Installing Matter CLI..."
 # Copy requirements from backend
 if [ ! -f "$SHARED_CONST_DIR/$SHARED_CONST_FILE" ]; then
@@ -60,7 +65,6 @@ if ! command -v pipx &> /dev/null; then
 
   sudo apt install -y pipx
   pipx ensurepath
-  export PATH="$HOME/.local/bin:$PATH"
 fi
 
 # Running Poetry install
